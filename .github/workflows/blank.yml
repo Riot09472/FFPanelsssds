@@ -1,0 +1,40 @@
+name: Build APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Unzip
+        run: unzip -o FFInjector.zip -d temp_project
+        
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Build
+        run: |
+          
+          GRADLEW_PATH=$(find temp_project -name "gradlew" -type f | head -n 1)
+          
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Wala talagang gradlew sa ZIP mo."
+            exit 1
+          fi
+          
+        
+          cd "$(dirname "$GRADLEW_PATH")"
+          
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK
+          
+          path: temp_project/**/app/build/outputs/apk/debug/*.apk
